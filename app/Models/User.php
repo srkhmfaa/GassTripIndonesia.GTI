@@ -21,6 +21,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
+        'status_akun',
     ];
 
     /**
@@ -44,5 +46,21 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Relasi: satu user dapat memiliki banyak itinerary.
+     */
+    public function itineraries()
+    {
+        return $this->hasMany(Itinerary::class, 'user_id');
+    }
+
+    /**
+     * Relasi: satu user memiliki satu subscription.
+     */
+    public function subscription()
+    {
+        return $this->hasOne(Subscription::class, 'user_id');
     }
 }

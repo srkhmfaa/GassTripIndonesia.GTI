@@ -11,6 +11,9 @@ export default function AppSidebarLayout({ children, breadcrumbs = [] }: { child
             <AppContent variant="sidebar">
                 <AppSidebarHeader breadcrumbs={breadcrumbs} />
                 {children}
+                <footer className="mt-auto px-4 py-4 text-center text-sm text-gray-500">
+                    Gasss<span className="font-medium text-[#0F6E56]">Trip</span> .Indonesia &copy; {new Date().getFullYear()}
+                </footer>
             </AppContent>
         </AppShell>
     );

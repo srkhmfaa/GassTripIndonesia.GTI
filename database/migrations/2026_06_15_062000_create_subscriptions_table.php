@@ -6,20 +6,19 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('subscriptions', function (Blueprint $table) {
-            $table->id();
+            $table->id('sub_id');
+            $table->foreignId('user_id')->constrained('users', 'id')->onDelete('cascade');
+            $table->string('package_type', 25);
+            $table->boolean('status')->default(false);
+            $table->timestamp('start_date');
+            $table->timestamp('end_date')->nullable();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('subscriptions');
