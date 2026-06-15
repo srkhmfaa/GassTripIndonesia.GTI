@@ -1,5 +1,5 @@
-import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
+import { ArrowLeft, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import AppLayout from '@/layouts/app-layout';
@@ -52,6 +52,12 @@ export default function ItineraryShow({ itinerary, detailsByDay }: ShowProps) {
     const formatDate = (dateStr: string) =>
         new Date(dateStr).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
+    const handleDelete = () => {
+        if (confirm('Hapus itinerary ini?')) {
+            router.delete(route('itineraries.destroy', itinerary.itinerary_id));
+        }
+    };
+
     // Hitung ringkasan biaya per kategori
     const allDetails = days.flatMap((d) => detailsByDay[d]);
     const totalsByCategory: Record<string, number> = {};
@@ -71,13 +77,23 @@ export default function ItineraryShow({ itinerary, detailsByDay }: ShowProps) {
             <Head title={`Itinerary ${itinerary.target_city} - GasssTrip Indonesia`} />
 
             <div className="flex h-full flex-1 flex-col gap-4 p-4">
-                <Link
-                    href={route('itineraries.index')}
-                    className="flex items-center gap-1 text-sm text-gray-500 hover:text-[#0F6E56]"
-                >
-                    <ArrowLeft className="h-4 w-4" />
-                    Kembali ke Itinerary
-                </Link>
+                <div className="flex items-center justify-between">
+                    <Link
+                        href={route('itineraries.index')}
+                        className="flex items-center gap-1 text-sm text-gray-500 hover:text-[#0F6E56]"
+                    >
+                        <ArrowLeft className="h-4 w-4" />
+                        Kembali ke Itinerary
+                    </Link>
+                    <button
+                        type="button"
+                        onClick={handleDelete}
+                        className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                        Hapus
+                    </button>
+                </div>
 
                 {/* Hero */}
                 <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">

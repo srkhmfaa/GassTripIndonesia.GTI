@@ -1,6 +1,6 @@
-import { Head, useForm, Link } from '@inertiajs/react';
+import { Head, useForm, Link, router } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
-import { LoaderCircle, Plus } from 'lucide-react';
+import { LoaderCircle, Plus, Trash2 } from 'lucide-react';
 
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
@@ -59,6 +59,12 @@ export default function ItineraryIndex({ itineraries }: { itineraries: Itinerary
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
         post(route('itineraries.store'));
+    };
+
+    const handleDelete = (id: number) => {
+        if (confirm('Hapus itinerary ini?')) {
+            router.delete(route('itineraries.destroy', id));
+        }
     };
 
     return (
@@ -188,12 +194,11 @@ export default function ItineraryIndex({ itineraries }: { itineraries: Itinerary
                     ) : (
                         <div className="grid gap-3">
                             {itineraries.map((item) => (
-                                <Link
+                                <div
                                     key={item.itinerary_id}
-                                    href={route('itineraries.show', item.itinerary_id)}
                                     className="flex items-center justify-between rounded-2xl border border-gray-200 bg-white p-4 hover:bg-gray-50"
                                 >
-                                    <div>
+                                    <Link href={route('itineraries.show', item.itinerary_id)} className="flex-1">
                                         <p className="font-medium text-gray-900">
                                             {item.target_city} · {item.duration_days} hari
                                         </p>
@@ -201,9 +206,24 @@ export default function ItineraryIndex({ itineraries }: { itineraries: Itinerary
                                             Est. Rp {Number(item.total_estimated_cost).toLocaleString('id-ID')} dari Rp{' '}
                                             {Number(item.max_budget).toLocaleString('id-ID')}
                                         </p>
+                                    </Link>
+                                    <div className="flex items-center gap-3">
+                                        <Link
+                                            href={route('itineraries.show', item.itinerary_id)}
+                                            className="text-sm text-[#0F6E56]"
+                                        >
+                                            Lihat &rarr;
+                                        </Link>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleDelete(item.itinerary_id)}
+                                            className="text-gray-400 hover:text-red-500"
+                                            title="Hapus itinerary"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
                                     </div>
-                                    <span className="text-sm text-[#0F6E56]">Lihat &rarr;</span>
-                                </Link>
+                                </div>
                             ))}
                         </div>
                     )}

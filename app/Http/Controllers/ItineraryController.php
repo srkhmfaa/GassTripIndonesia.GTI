@@ -115,4 +115,19 @@ class ItineraryController extends Controller
             'detailsByDay' => $details,
         ]);
     }
+
+    /**
+     * Hapus itinerary milik user.
+     */
+    public function destroy(Request $request, Itinerary $itinerary)
+    {
+        abort_if($itinerary->user_id !== $request->user()->id, 403);
+
+        // Hapus detail terkait dulu (jika tidak ada cascade di DB)
+        ItineraryDetail::where('itinerary_id', $itinerary->itinerary_id)->delete();
+
+        $itinerary->delete();
+
+        return redirect()->route('itineraries.index');
+    }
 }

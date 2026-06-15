@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\ItineraryController;
+use App\Models\Itinerary;
+use App\Models\ItineraryDetail;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -9,13 +12,29 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
+    Route::get('dashboard', function (Request $request) {
+        $userId = $request->user()->id;
+
+        $itineraryCount = Itinerary::where('user_id', $userId)->count();
+
+        $itineraryIds = Itinerary::where('user_id', $userId)->pluck('itinerary_id');
+
+        $destinationCount = ItineraryDetail::whereIn('itinerary_id', $itineraryIds)
+            ->distinct('destination_id')
+            ->count('destination_id');
+
+        return Inertia::render('dashboard', [
+            'stats' => [
+                'itinerary_count' => $itineraryCount,
+                'destination_count' => $destinationCount,
+            ],
+        ]);
     })->name('dashboard');
 
     Route::get('/itineraries', [ItineraryController::class, 'index'])->name('itineraries.index');
     Route::post('/itineraries', [ItineraryController::class, 'store'])->name('itineraries.store');
     Route::get('/itineraries/{itinerary}', [ItineraryController::class, 'show'])->name('itineraries.show');
+    Route::delete('/itineraries/{itinerary}', [ItineraryController::class, 'destroy'])->name('itineraries.destroy');
 });
 
 require __DIR__.'/settings.php';

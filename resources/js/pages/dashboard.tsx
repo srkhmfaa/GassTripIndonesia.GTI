@@ -1,4 +1,4 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, Link } from '@inertiajs/react';
 import { Mountain, Building2, Waves, Plus } from 'lucide-react';
 
 import AppLayout from '@/layouts/app-layout';
@@ -15,7 +15,14 @@ const popularDestinations = [
     { name: 'Lombok', count: 195, icon: Waves, color: '#F0B8AC' },
 ];
 
-export default function Dashboard() {
+interface DashboardProps {
+    stats: {
+        itinerary_count: number;
+        destination_count: number;
+    };
+}
+
+export default function Dashboard({ stats }: DashboardProps) {
     const { auth } = usePage().props as any;
     const userName = auth?.user?.name ?? 'Traveler';
 
@@ -33,11 +40,11 @@ export default function Dashboard() {
                 {/* Stats */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="rounded-2xl border border-gray-200 bg-white p-6">
-                        <p className="text-3xl font-bold text-gray-900">0</p>
+                        <p className="text-3xl font-bold text-gray-900">{stats.itinerary_count}</p>
                         <p className="mt-1 text-sm text-gray-500">Itinerary tersimpan</p>
                     </div>
                     <div className="rounded-2xl border border-gray-200 bg-white p-6">
-                        <p className="text-3xl font-bold text-gray-900">0</p>
+                        <p className="text-3xl font-bold text-gray-900">{stats.destination_count}</p>
                         <p className="mt-1 text-sm text-gray-500">Destinasi dijelajahi</p>
                     </div>
                 </div>
@@ -65,10 +72,13 @@ export default function Dashboard() {
                 </div>
 
                 {/* CTA */}
-                <button className="flex w-full items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white py-4 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                <Link
+                    href={route('itineraries.index')}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white py-4 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
                     <Plus className="h-4 w-4" />
                     Buat itinerary baru
-                </button>
+                </Link>
             </div>
         </AppLayout>
     );
