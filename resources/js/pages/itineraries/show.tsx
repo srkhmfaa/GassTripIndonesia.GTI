@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft, Trash2, Pencil } from 'lucide-react';
+import { Trash2, Pencil } from 'lucide-react';
 import { useState } from 'react';
 
 import AppLayout from '@/layouts/app-layout';
@@ -58,7 +58,6 @@ export default function ItineraryShow({ itinerary, detailsByDay }: ShowProps) {
         }
     };
 
-    // Hitung ringkasan biaya per kategori
     const allDetails = days.flatMap((d) => detailsByDay[d]);
     const totalsByCategory: Record<string, number> = {};
     allDetails.forEach((item) => {
@@ -76,41 +75,35 @@ export default function ItineraryShow({ itinerary, detailsByDay }: ShowProps) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Itinerary ${itinerary.target_city} - GasssTrip Indonesia`} />
 
-            <div className="flex items-center justify-between">
-                <Link
-                    href={route('itineraries.index')}
-                    className="flex items-center gap-1 text-sm text-gray-500 hover:text-[#0F6E56]"
-                >
-                    <ArrowLeft className="h-4 w-4" />
-                    Kembali ke Itinerary
-                </Link>
-                <div className="flex items-center gap-3">
-                    <Link
-                        href={route('itineraries.edit', itinerary.itinerary_id)}
-                        className="flex items-center gap-1 text-sm text-gray-500 hover:text-[#0F6E56]"
-                    >
-                        <Pencil className="h-4 w-4" />
-                        Edit
-                    </Link>
-                    <button
-                        type="button"
-                        onClick={handleDelete}
-                        className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600"
-                    >
-                        <Trash2 className="h-4 w-4" />
-                        Hapus
-                    </button>
-                </div>
-
-                {/* Hero */}
+            <div className="flex h-full flex-1 flex-col gap-4 p-4">
+                {/* Hero dengan tombol edit & hapus di kanan atas */}
                 <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
-                    <div className="bg-[#0F6E56] px-6 py-4">
-                        <h1 className="text-base font-semibold text-white">
-                            Itinerary {itinerary.target_city} · {itinerary.duration_days} hari
-                        </h1>
-                        <p className="text-sm text-white/70">
-                            Est. {formatRupiah(itinerary.total_estimated_cost)} dari {formatRupiah(itinerary.max_budget)} budget
-                        </p>
+                    <div className="flex items-center justify-between bg-[#0F6E56] px-6 py-4">
+                        <div>
+                            <h1 className="text-base font-semibold text-white">
+                                Itinerary {itinerary.target_city} · {itinerary.duration_days} hari
+                            </h1>
+                            <p className="text-sm text-white/70">
+                                Est. {formatRupiah(itinerary.total_estimated_cost)} dari {formatRupiah(itinerary.max_budget)} budget
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <Link
+                                href={route('itineraries.edit', itinerary.itinerary_id)}
+                                className="flex items-center gap-1 text-sm text-white/80 hover:text-white"
+                            >
+                                <Pencil className="h-4 w-4" />
+                                Edit
+                            </Link>
+                            <button
+                                type="button"
+                                onClick={handleDelete}
+                                className="flex items-center gap-1 text-sm text-white/80 hover:text-white"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                                Hapus
+                            </button>
+                        </div>
                     </div>
 
                     <div className="p-4">
@@ -133,7 +126,6 @@ export default function ItineraryShow({ itinerary, detailsByDay }: ShowProps) {
                                     ))}
                                 </div>
 
-                                {/* Active day content */}
                                 {activeDay && (
                                     <div>
                                         <div className="mb-2 flex items-center justify-between">

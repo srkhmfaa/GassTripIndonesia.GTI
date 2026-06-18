@@ -1,4 +1,3 @@
-import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
@@ -7,7 +6,7 @@ import { Link } from '@inertiajs/react';
 
 const sidebarNavItems: NavItem[] = [
     {
-        title: 'Profile',
+        title: 'Profil',
         url: '/settings/profile',
         icon: null,
     },
@@ -17,7 +16,7 @@ const sidebarNavItems: NavItem[] = [
         icon: null,
     },
     {
-        title: 'Appearance',
+        title: 'Tampilan',
         url: '/settings/appearance',
         icon: null,
     },
@@ -28,7 +27,10 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
 
     return (
         <div className="px-4 py-6">
-            <Heading title="Settings" description="Manage your profile and account settings" />
+            <div className="mb-6 rounded-2xl bg-[#0F6E56] px-6 py-6 text-white">
+                <h1 className="text-xl font-semibold">Pengaturan</h1>
+                <p className="mt-1 text-sm text-white/70">Kelola profil dan akun kamu</p>
+            </div>
 
             <div className="flex flex-col space-y-8 lg:flex-row lg:space-y-0 lg:space-x-12">
                 <aside className="w-full max-w-xl lg:w-48">
@@ -40,7 +42,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                                 variant="ghost"
                                 asChild
                                 className={cn('w-full justify-start', {
-                                    'bg-muted': currentPath === item.url,
+                                    'bg-[#E1F5EE] text-[#085041]': currentPath === item.url,
                                 })}
                             >
                                 <Link href={item.url} prefetch>
