@@ -32,7 +32,9 @@ Route::middleware(['auth'])->group(function () {
     })->name('dashboard');
 
     Route::get('/itineraries', [ItineraryController::class, 'index'])->name('itineraries.index');
+    Route::get('/itineraries/{itinerary}/edit', [ItineraryController::class, 'edit'])->name('itineraries.edit');
     Route::post('/itineraries', [ItineraryController::class, 'store'])->name('itineraries.store');
+    Route::put('/itineraries/{itinerary}', [ItineraryController::class, 'update'])->name('itineraries.update');
     Route::get('/itineraries/{itinerary}', [ItineraryController::class, 'show'])->name('itineraries.show');
     Route::delete('/itineraries/{itinerary}', [ItineraryController::class, 'destroy'])->name('itineraries.destroy');
 });

@@ -11,7 +11,7 @@ use Inertia\Inertia;
 class ItineraryController extends Controller
 {
     /**
-     * Daftar itinerary milik user + form buat baru.
+     * Halaman utama: form buat itinerary (mode create) + list tersimpan.
      */
     public function index(Request $request)
     {
@@ -21,77 +21,84 @@ class ItineraryController extends Controller
 
         return Inertia::render('itineraries/index', [
             'itineraries' => $itineraries,
+            'editingItinerary' => null,
         ]);
     }
 
     /**
-     * Generate itinerary otomatis berdasarkan input form.
+     * Halaman yang sama, tapi form pre-filled untuk edit (mode edit).
+     */
+    public function edit(Request $request, Itinerary $itinerary)
+    {
+        abort_if($itinerary->user_id !== $request->user()->id, 403);
+
+        $itineraries = Itinerary::where('user_id', $request->user()->id)
+            ->orderByDesc('created_at')
+            ->get();
+
+        return Inertia::render('itineraries/index', [
+            'itineraries' => $itineraries,
+            'editingItinerary' => $itinerary,
+        ]);
+    }
+
+    /**
+     * Generate itinerary baru.
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
             'target_city'     => 'required|string|max:225',
+            'start_date'      => 'required|date|after_or_equal:today',
             'duration_days'   => 'required|integer|min:1|max:30',
             'max_budget'      => 'required|numeric|min:0',
             'budget_category' => 'required|string|in:hemat,menengah,mewah',
             'categories'      => 'array',
         ]);
 
-        // 1. Simpan itinerary header
         $itinerary = Itinerary::create([
             'user_id'         => $request->user()->id,
             'target_city'     => $validated['target_city'],
-            'start_date'      => now()->addDay(),
+            'start_date'      => $validated['start_date'],
             'duration_days'   => $validated['duration_days'],
             'budget_category' => $validated['budget_category'],
             'max_budget'      => $validated['max_budget'],
             'total_estimated_cost' => 0,
         ]);
 
-        // 2. Ambil destinasi sesuai kota (+ filter kategori jika ada)
-        $query = Destination::where('city', $validated['target_city']);
+        $this->generateDetails($itinerary, $validated);
 
-        if (!empty($validated['categories'])) {
-            $query->whereIn('category', $validated['categories']);
-        }
+        return redirect()->route('itineraries.show', $itinerary->itinerary_id);
+    }
 
-        $destinations = $query->orderByDesc('hidden_gem')->get();
+    /**
+     * Update itinerary: regenerate details berdasarkan parameter baru.
+     */
+    public function update(Request $request, Itinerary $itinerary)
+    {
+        abort_if($itinerary->user_id !== $request->user()->id, 403);
 
-        // 3. Alokasi sederhana: distribusikan destinasi ke setiap hari,
-        //    hentikan kalau total biaya sudah mendekati max_budget
-        $totalCost = 0;
-        $visitOrder = 1;
-        $currentDay = 1;
-        $perDayLimit = 4; // maksimal 4 aktivitas per hari
+        $validated = $request->validate([
+            'target_city'     => 'required|string|max:225',
+            'start_date'      => 'required|date',
+            'duration_days'   => 'required|integer|min:1|max:30',
+            'max_budget'      => 'required|numeric|min:0',
+            'budget_category' => 'required|string|in:hemat,menengah,mewah',
+            'categories'      => 'array',
+        ]);
 
-        foreach ($destinations as $destination) {
-            if ($currentDay > $validated['duration_days']) {
-                break;
-            }
+        $itinerary->update([
+            'target_city'     => $validated['target_city'],
+            'start_date'      => $validated['start_date'],
+            'duration_days'   => $validated['duration_days'],
+            'budget_category' => $validated['budget_category'],
+            'max_budget'      => $validated['max_budget'],
+            'total_estimated_cost' => 0,
+        ]);
 
-            if (($totalCost + $destination->price) > $validated['max_budget']) {
-                continue;
-            }
+        ItineraryDetail::where('itinerary_id', $itinerary->itinerary_id)->delete();
 
-            ItineraryDetail::create([
-                'itinerary_id'    => $itinerary->itinerary_id,
-                'destination_id'  => $destination->destination_id,
-                'visit_day'       => now()->addDays($currentDay - 1)->format('Y-m-d'),
-                'visit_order'     => $visitOrder,
-                'estimated_time'  => null,
-            ]);
-
-            $totalCost += $destination->price;
-            $visitOrder++;
-
-            if ($visitOrder > $perDayLimit) {
-                $visitOrder = 1;
-                $currentDay++;
-            }
-        }
-
-        // 4. Update total estimasi biaya
-        $itinerary->update(['total_estimated_cost' => $totalCost]);
+        $this->generateDetails($itinerary, $validated);
 
         return redirect()->route('itineraries.show', $itinerary->itinerary_id);
     }
@@ -123,11 +130,59 @@ class ItineraryController extends Controller
     {
         abort_if($itinerary->user_id !== $request->user()->id, 403);
 
-        // Hapus detail terkait dulu (jika tidak ada cascade di DB)
         ItineraryDetail::where('itinerary_id', $itinerary->itinerary_id)->delete();
 
         $itinerary->delete();
 
         return redirect()->route('itineraries.index');
+    }
+
+    /**
+     * Logic generate itinerary_details (dipakai oleh store & update).
+     */
+    private function generateDetails(Itinerary $itinerary, array $validated): void
+    {
+        $query = Destination::where('city', $validated['target_city']);
+
+        if (!empty($validated['categories'])) {
+            $query->whereIn('category', $validated['categories']);
+        }
+
+        $destinations = $query->orderByDesc('hidden_gem')->get();
+
+        $totalCost = 0;
+        $visitOrder = 1;
+        $currentDay = 1;
+        $perDayLimit = 4;
+
+        foreach ($destinations as $destination) {
+            if ($currentDay > $validated['duration_days']) {
+                break;
+            }
+
+            if (($totalCost + $destination->price) > $validated['max_budget']) {
+                continue;
+            }
+
+            ItineraryDetail::create([
+                'itinerary_id'    => $itinerary->itinerary_id,
+                'destination_id'  => $destination->destination_id,
+                'visit_day'       => \Carbon\Carbon::parse($validated['start_date'])
+                    ->addDays($currentDay - 1)
+                    ->format('Y-m-d'),
+                'visit_order'     => $visitOrder,
+                'estimated_time'  => null,
+            ]);
+
+            $totalCost += $destination->price;
+            $visitOrder++;
+
+            if ($visitOrder > $perDayLimit) {
+                $visitOrder = 1;
+                $currentDay++;
+            }
+        }
+
+        $itinerary->update(['total_estimated_cost' => $totalCost]);
     }
 }

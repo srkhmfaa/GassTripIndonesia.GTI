@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, Trash2, Pencil } from 'lucide-react';
 import { useState } from 'react';
 
 import AppLayout from '@/layouts/app-layout';
@@ -76,14 +76,21 @@ export default function ItineraryShow({ itinerary, detailsByDay }: ShowProps) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Itinerary ${itinerary.target_city} - GasssTrip Indonesia`} />
 
-            <div className="flex h-full flex-1 flex-col gap-4 p-4">
-                <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between">
+                <Link
+                    href={route('itineraries.index')}
+                    className="flex items-center gap-1 text-sm text-gray-500 hover:text-[#0F6E56]"
+                >
+                    <ArrowLeft className="h-4 w-4" />
+                    Kembali ke Itinerary
+                </Link>
+                <div className="flex items-center gap-3">
                     <Link
-                        href={route('itineraries.index')}
+                        href={route('itineraries.edit', itinerary.itinerary_id)}
                         className="flex items-center gap-1 text-sm text-gray-500 hover:text-[#0F6E56]"
                     >
-                        <ArrowLeft className="h-4 w-4" />
-                        Kembali ke Itinerary
+                        <Pencil className="h-4 w-4" />
+                        Edit
                     </Link>
                     <button
                         type="button"
