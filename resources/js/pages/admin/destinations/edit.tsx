@@ -1,5 +1,5 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import { MapPin, ArrowLeft, Loader2 } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 
 interface Destination {
     destination_id: number;
@@ -19,130 +19,171 @@ interface Props {
     destination: Destination;
 }
 
-export default function EditDestination({ destination }: Props) {
-    // Format tanggal jam_operasional ke format input datetime-local jika ada
-    const formattedDate = destination.jam_operasional 
-        ? new Date(destination.jam_operasional).toISOString().slice(0, 16) 
-        : '';
-
+export default function AdminDestinationEdit({ destination }: Props) {
     const { data, setData, post, processing, errors } = useForm({
-        _method: 'PUT', // Trik Laravel untuk update data + file upload
+        _method: 'PUT',
         name: destination.name,
         category: destination.category,
         city: destination.city,
         description: destination.description ?? '',
-        price: Number(destination.price),
+        price: destination.price,
         latitude: destination.latitude,
         longitude: destination.longitude,
-        jam_operasional: formattedDate,
+        jam_operasional: destination.jam_operasional
+            ? destination.jam_operasional.slice(0, 16) // format datetime-local
+            : '',
         hidden_gem: destination.hidden_gem,
         image: null as File | null,
     });
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        // Tetap pakai router.post karena ada trik _method di atas
-        post(route('admin.destinations.update', destination.destination_id));
+        post(route('admin.destinations.update', destination.destination_id), {
+            forceFormData: true,
+        });
     }
 
     return (
         <>
-            <Head title={`Edit Destinasi — ${destination.name}`} />
-            <div className="min-h-screen bg-gray-50 py-8">
-                <div className="max-w-3xl mx-auto px-6">
-                    <Link href={route('admin.destinations.index')} className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 mb-4 transition">
-                        <ArrowLeft className="w-4 h-4" /> Kembali
+            <Head title="Edit Destinasi" />
+            <div className="min-h-screen bg-gray-50">
+                <div className="bg-white border-b px-6 py-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <MapPin className="w-5 h-5 text-blue-600" />
+                        <h1 className="text-xl font-semibold text-gray-800">Edit Destinasi</h1>
+                    </div>
+                    <Link href={route('admin.destinations.index')} className="text-sm text-gray-500 hover:text-gray-800">
+                        ← Kembali
                     </Link>
+                </div>
 
-                    <div className="bg-white rounded-xl border p-6 shadow-sm">
-                        <div className="flex items-center gap-2 border-b pb-4 mb-6">
-                            <MapPin className="w-5 h-5 text-blue-600" />
-                            <h1 className="text-xl font-bold text-gray-800">Edit Destinasi Wisata</h1>
-                        </div>
+                <div className="max-w-2xl mx-auto px-6 py-8">
+                    <div className="bg-white border rounded-xl p-6">
+                        {/* Preview gambar lama */}
+                        {destination.image_url && (
+                            <div className="mb-5">
+                                <p className="text-sm font-medium text-gray-700 mb-2">Gambar saat ini:</p>
+                                <img
+                                    src={destination.image_url}
+                                    alt={destination.name}
+                                    className="w-40 h-28 object-cover rounded-lg border"
+                                />
+                            </div>
+                        )}
 
                         <form onSubmit={handleSubmit} className="space-y-5">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Nama Destinasi *</label>
-                                    <input type="text" value={data.name} onChange={e => setData('name', e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
-                                    {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Kategori *</label>
-                                    <select value={data.category} onChange={e => setData('category', e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                                        <option value="Wisata Alam">Wisata Alam</option>
-                                        <option value="Kuliner">Kuliner</option>
-                                        <option value="Budaya">Budaya</option>
-                                        <option value="Belanja">Belanja</option>
-                                    </select>
-                                    {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
-                                </div>
+                            <FormField label="Nama Destinasi" error={errors.name}>
+                                <input
+                                    type="text"
+                                    value={data.name}
+                                    onChange={(e) => setData('name', e.target.value)}
+                                    className="input"
+                                />
+                            </FormField>
+
+                            <FormField label="Kategori" error={errors.category}>
+                                <select value={data.category} onChange={(e) => setData('category', e.target.value)} className="input">
+                                    <option value="">-- Pilih Kategori --</option>
+                                    <option value="Wisata Alam">Wisata Alam</option>
+                                    <option value="Kuliner">Kuliner</option>
+                                    <option value="Budaya">Budaya</option>
+                                    <option value="Belanja">Belanja</option>
+                                </select>
+                            </FormField>
+
+                            <FormField label="Kota" error={errors.city}>
+                                <input
+                                    type="text"
+                                    value={data.city}
+                                    onChange={(e) => setData('city', e.target.value)}
+                                    className="input"
+                                />
+                            </FormField>
+
+                            <FormField label="Deskripsi" error={errors.description}>
+                                <textarea
+                                    value={data.description}
+                                    onChange={(e) => setData('description', e.target.value)}
+                                    className="input min-h-24 resize-y"
+                                />
+                            </FormField>
+
+                            <FormField label="Harga Tiket (Rp)" error={errors.price}>
+                                <input
+                                    type="number"
+                                    value={data.price}
+                                    onChange={(e) => setData('price', e.target.value)}
+                                    className="input"
+                                    min="0"
+                                />
+                            </FormField>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormField label="Latitude" error={errors.latitude}>
+                                    <input
+                                        type="number"
+                                        step="any"
+                                        value={data.latitude}
+                                        onChange={(e) => setData('latitude', e.target.value)}
+                                        className="input"
+                                    />
+                                </FormField>
+                                <FormField label="Longitude" error={errors.longitude}>
+                                    <input
+                                        type="number"
+                                        step="any"
+                                        value={data.longitude}
+                                        onChange={(e) => setData('longitude', e.target.value)}
+                                        className="input"
+                                    />
+                                </FormField>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Kota *</label>
-                                    <input type="text" value={data.city} onChange={e => setData('city', e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
-                                    {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city}</p>}
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Harga Tiket Masuk (Rp) *</label>
-                                    <input type="number" value={data.price} onChange={e => setData('price', Number(e.target.value))} className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
-                                    {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price}</p>}
-                                </div>
+                            <FormField label="Jam Operasional" error={errors.jam_operasional}>
+                                <input
+                                    type="datetime-local"
+                                    value={data.jam_operasional}
+                                    onChange={(e) => setData('jam_operasional', e.target.value)}
+                                    className="input"
+                                />
+                            </FormField>
+
+                            <FormField label="Ganti Gambar (opsional)" error={errors.image}>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => setData('image', e.target.files?.[0] ?? null)}
+                                    className="input file:mr-3 file:px-3 file:py-1 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700 file:text-sm"
+                                />
+                                <p className="text-xs text-gray-400 mt-1">Biarkan kosong jika tidak ingin mengganti gambar.</p>
+                            </FormField>
+
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    id="hidden_gem"
+                                    checked={data.hidden_gem}
+                                    onChange={(e) => setData('hidden_gem', e.target.checked)}
+                                    className="w-4 h-4 accent-blue-600"
+                                />
+                                <label htmlFor="hidden_gem" className="text-sm text-gray-700">
+                                    Tandai sebagai Hidden Gem ✨
+                                </label>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Latitude *</label>
-                                    <input type="number" step="any" value={data.latitude} onChange={e => setData('latitude', e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
-                                    {errors.latitude && <p className="text-red-500 text-xs mt-1">{errors.latitude}</p>}
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Longitude *</label>
-                                    <input type="number" step="any" value={data.longitude} onChange={e => setData('longitude', e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
-                                    {errors.longitude && <p className="text-red-500 text-xs mt-1">{errors.longitude}</p>}
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Jam Operasional</label>
-                                    <input type="datetime-local" value={data.jam_operasional} onChange={e => setData('jam_operasional', e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
-                                    {errors.jam_operasional && <p className="text-red-500 text-xs mt-1">{errors.jam_operasional}</p>}
-                                </div>
-                                <div className="pt-5">
-                                    <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-                                        <input type="checkbox" checked={data.hidden_gem} onChange={e => setData('hidden_gem', e.target.checked)} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4" />
-                                        <span className="text-sm font-medium text-gray-700">Tandai sebagai Hidden Gem ✨</span>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
-                                <textarea rows={4} value={data.description} onChange={e => setData('description', e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none" />
-                                {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Ganti Foto Destinasi</label>
-                                {destination.image_url && (
-                                    <div className="mb-2">
-                                        <p className="text-xs text-gray-400 mb-1">Foto Saat Ini:</p>
-                                        <img src={destination.image_url} alt={destination.name} className="w-32 h-20 object-cover rounded border" />
-                                    </div>
-                                )}
-                                <input type="file" accept="image/*" onChange={e => setData('image', e.target.files ? e.target.files[0] : null)} className="w-full border rounded-lg px-3 py-1.5 text-sm file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
-                                {errors.image && <p className="text-red-500 text-xs mt-1">{errors.image}</p>}
-                            </div>
-
-                            <div className="border-t pt-4 flex justify-end gap-2">
-                                <Link href={route('admin.destinations.index')} className="px-4 py-2 text-sm border rounded-lg text-gray-600 hover:bg-gray-50">
+                            <div className="flex justify-end gap-3 pt-2">
+                                <Link
+                                    href={route('admin.destinations.index')}
+                                    className="px-4 py-2 border rounded-lg text-sm text-gray-600 hover:bg-gray-50"
+                                >
                                     Batal
                                 </Link>
-                                <button type="submit" disabled={processing} className="flex items-center gap-1 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50">
-                                    {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Simpan Perubahan'}
+                                <button
+                                    type="submit"
+                                    disabled={processing}
+                                    className="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-60"
+                                >
+                                    {processing ? 'Menyimpan...' : 'Simpan Perubahan'}
                                 </button>
                             </div>
                         </form>
@@ -150,5 +191,15 @@ export default function EditDestination({ destination }: Props) {
                 </div>
             </div>
         </>
+    );
+}
+
+function FormField({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+    return (
+        <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">{label}</label>
+            {children}
+            {error && <p className="text-xs text-red-500">{error}</p>}
+        </div>
     );
 }

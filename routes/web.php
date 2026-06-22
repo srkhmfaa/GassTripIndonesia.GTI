@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Admin\DestinationController as AdminDestinationController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController; 
+use App\Http\Controllers\Auth\RegisteredUserController; 
 use App\Http\Controllers\ItineraryController;
 use App\Models\Destination;
 use App\Models\Itinerary;
@@ -11,9 +13,33 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+// =====================
+// Routes Autentikasi
+// =====================
+Route::middleware('web')->group(function () {
+    Route::middleware('guest')->group(function () {
+        // Login
+        Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
+        Route::post('login', [AuthenticatedSessionController::class, 'store']);
+
+        // Register (Wajib ada karena dicek oleh component Login React)
+        Route::get('register', [RegisteredUserController::class, 'create'])->name('register');
+        Route::post('register', [RegisteredUserController::class, 'store']);
+    });
+
+    Route::middleware('auth')->group(function () {
+        Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+    });
+});
+
+
+// =====================
+// Route Halaman Utama
+// =====================
 Route::get('/', function () {
     return redirect()->route('login');
 })->name('home');
+
 
 // =====================
 // Routes USER (Traveler)
@@ -44,6 +70,7 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/itineraries/{itinerary}', [ItineraryController::class, 'destroy'])->name('itineraries.destroy');
 });
 
+
 // =====================
 // Routes ADMIN
 // =====================
@@ -70,5 +97,5 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('destinations', AdminDestinationController::class);
 });
 
+// Jika butuh sisanya bawaan breeze, panggil filenya di sini
 require __DIR__.'/settings.php';
-require __DIR__.'/auth.php';
