@@ -13,11 +13,13 @@ class Destination extends Model
         'name',
         'category',
         'city',
+        'description',
         'price',
         'latitude',
         'longitude',
         'jam_operasional',
         'hidden_gem',
+        'image',
     ];
 
     protected $casts = [
@@ -31,5 +33,17 @@ class Destination extends Model
     public function itineraryDetails()
     {
         return $this->hasMany(ItineraryDetail::class, 'destination_id');
+    }
+
+    protected $appends = [
+        'image_url',
+    ];
+
+    /**
+     * URL publik untuk gambar destinasi (null jika belum ada gambar).
+     */
+    public function getImageUrlAttribute(): ?string
+    {
+        return $this->image ? asset('storage/'.$this->image) : null;
     }
 }
