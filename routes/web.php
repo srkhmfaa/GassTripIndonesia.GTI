@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController; 
 use App\Http\Controllers\Auth\RegisteredUserController; 
 use App\Http\Controllers\ItineraryController;
+use App\Http\Controllers\DestinationController;
 use App\Models\Destination;
 use App\Models\Itinerary;
 use App\Models\ItineraryDetail;
@@ -68,6 +69,8 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/itineraries/{itinerary}', [ItineraryController::class, 'update'])->name('itineraries.update');
     Route::get('/itineraries/{itinerary}', [ItineraryController::class, 'show'])->name('itineraries.show');
     Route::delete('/itineraries/{itinerary}', [ItineraryController::class, 'destroy'])->name('itineraries.destroy');
+
+    Route::get('/destinations', [DestinationController::class, 'index'])->name('destinations.index');
 });
 
 
